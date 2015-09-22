@@ -1,0 +1,48 @@
+{
+   "abstract" : "Blah blah blah",
+   "author" : [
+      "Scott Kiehn E<lt>sk.keenlinks@gmail.comE<gt>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "App::ModuleBuildTiny version 0.010",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Mojolicious-Plugin-SessionTags",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "Module::Build::Tiny" : "0.039"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "App::ModuleBuildTiny" : "0.010"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Mojolicious" : "6.20",
+            "perl" : "5.008001"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::Exception" : "0.40",
+            "Test::More" : "0.98"
+         }
+      }
+   },
+   "provides" : {
+      "Mojolicious::Plugin::SessionTags" : {
+         "file" : "lib/Mojolicious/Plugin/SessionTags.pm",
+         "version" : "0.02"
+      }
+   },
+   "release_status" : "stable",
+   "version" : "0.02"
+}
