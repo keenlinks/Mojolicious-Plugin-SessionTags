@@ -1,4 +1,7 @@
 Revision history for Perl module Mojolicious-Plugin-SessionTags
 
-0.01 2015-09-21
+0.02 2015-09-21
+  - Added sum_tag helper
+
+0.01 2015-09-18
   - Initial release
