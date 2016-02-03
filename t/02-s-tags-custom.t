@@ -4,18 +4,18 @@ use Test::More;
 use Mojolicious::Lite;
 use Test::Mojo;
 
-plugin 'Mojolicious::Plugin::SessionTags' => { session_key => 'my_key', name => 'role', tags => [qw/ user admin super exec nobody sam_i_am /] };
+plugin 'Mojolicious::Plugin::SessionTags' => { name => 'role', tags => [qw/ user admin super exec nobody sam_i_am /] };
 
 my $t = Test::Mojo->new;
 my $c = $t->app->build_controller;
 
-ok( $c->sum_role == $c->session->{my_key} );
+ok( $c->sum_role == $c->session->{sstag_role} );
 
 $c->add_role( 'user' );
 $c->add_role( 'exec' );
 $c->add_role( 'nobody' );
 
-ok( $c->sum_role == $c->session->{my_key} );
+ok( $c->sum_role == $c->session->{sstag_role} );
 ok( $c->sum_role == 25 );
 
 ok( $c->has_role( 'user' ) == 1 );
@@ -45,7 +45,7 @@ ok( $c->not_role( 'nobody' ) == 0 );
 $c->nix_role( 'nobody' );
 $c->nix_role( 'exec' );
 
-ok( $c->sum_role == $c->session->{my_key} );
+ok( $c->sum_role == $c->session->{sstag_role} );
 ok( $c->sum_role== 1 );
 
 ok( $c->has_role( 'nobody' ) == 0 );

@@ -3,14 +3,14 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
 
-	has session_key => $conf->{session_key} // 's_tags';
-
 	has name => $conf->{name} // 'tag';
+
+	has session_key => 'sstag_' . $self->name;
 
 	has place_values => sub {
 		my $place_values = {};
@@ -73,7 +73,7 @@ sub register {
 		my $self = shift;
 		my $tag = shift // '';
 
-		croak 'Cannot locate the ' . $self->name . ' for the SessionTags plugin helper.'
+		croak '"' . $tag . '" is not a valid tag for ' . __PACKAGE__
 			unless $self->place_values->{$tag};
 
 		return $tag;
