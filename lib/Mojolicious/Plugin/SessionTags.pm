@@ -3,21 +3,21 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
+
+has session_key => 'sstag_tag';
+has name => 'tag';
+has place_values => sub { {} };
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
 
-	has name => $conf->{name} // 'tag';
+	if ( $conf->{name} ) {
+		$self->session_key( 'sstag_' . $conf->{name} );
+		$self->name( $conf->{name} );
+	}
 
-	has session_key => 'sstag_' . $self->name;
-
-	has place_values => sub {
-		my $place_values = {};
-		my $place_value = 0.5;
-		$place_values->{$_} = ( $place_value *= 2 ) for @{ $conf->{tags} };
-		return $place_values
-	};
+	$self->place_values( $self->_set_place_values( $conf->{tags} ) );
 
 	$app->helper(
 		'sum_' . $self->name => sub {
@@ -68,16 +68,23 @@ sub register {
 			$c->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value - $self->place_values->{$tag} : $session_value;
 		}
 	);
+}
 
-	sub _check_input_tag {
-		my $self = shift;
-		my $tag = shift // '';
+sub _check_input_tag {
+	my $self = shift;
+	my $tag = shift // '';
 
-		croak '"' . $tag . '" is not a valid ' . $self->name . ' for ' . __PACKAGE__
-			unless $self->place_values->{$tag};
+	croak '"' . $tag . '" is not a valid ' . $self->name . ' for ' . __PACKAGE__
+		unless $self->place_values->{$tag};
 
-		return $tag;
-	}
+	return $tag;
+}
+
+sub _set_place_values {
+	my $place_values = {};
+	my $place_value = 0.5;
+	$place_values->{$_} = ( $place_value *= 2 ) for @{ $_[1] };
+	return $place_values
 }
 
 1;

@@ -9,7 +9,7 @@ plugin 'Mojolicious::Plugin::SessionTags' => { tags => [qw/ happy sad stupid sma
 my $t = Test::Mojo->new;
 my $c = $t->app->build_controller;
 
-ok( $c->sum_tag == $c->session->{s_tags} );
+ok( $c->sum_tag == $c->session->{sstag_tag} );
 
 ok( $c->add_tag( 'happy' ) == 1 );
 ok( $c->add_tag( 'smart' ) == 9 );
