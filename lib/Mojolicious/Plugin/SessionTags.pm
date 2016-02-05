@@ -3,7 +3,7 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 has session_key => 'sstag_tag';
 has name => 'tag';
@@ -71,20 +71,14 @@ sub register {
 }
 
 sub _check_input_tag {
-	my $self = shift;
-	my $tag = shift // '';
-
-	croak '"' . $tag . '" is not a valid ' . $self->name . ' for ' . __PACKAGE__
-		unless $self->place_values->{$tag};
-
-	return $tag;
+	croak 'No input provided for ' . __PACKAGE__ unless $_[1];
+	return $_[1] if $_[0]->place_values->{$_[1]};
+	croak '"' . $_[1] . '" is not a valid ' . $_[0]->name . ' for ' . __PACKAGE__;
 }
 
 sub _set_place_values {
-	my $place_values = {};
-	my $place_value = 0.5;
-	$place_values->{$_} = ( $place_value *= 2 ) for @{ $_[1] };
-	return $place_values
+	my $pv = 0.5;
+	return { map { $_ => $pv *= 2 } @{$_[1]} };
 }
 
 1;

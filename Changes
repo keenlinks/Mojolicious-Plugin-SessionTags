@@ -1,5 +1,8 @@
 Revision history for Perl module Mojolicious-Plugin-SessionTags
 
+0.05 2016-02-05
+  - Streamlined support functions
+
 0.04 2016-02-04
   - Fixed attr bug
 
