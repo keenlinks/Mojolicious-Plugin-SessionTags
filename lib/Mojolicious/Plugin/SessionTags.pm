@@ -73,7 +73,7 @@ sub register {
 		my $self = shift;
 		my $tag = shift // '';
 
-		croak '"' . $tag . '" is not a valid tag for ' . __PACKAGE__
+		croak '"' . $tag . '" is not a valid ' . $self->name . ' for ' . __PACKAGE__
 			unless $self->place_values->{$tag};
 
 		return $tag;
