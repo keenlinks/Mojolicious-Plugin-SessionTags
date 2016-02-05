@@ -17,8 +17,8 @@ name: Mojolicious-Plugin-SessionTags
 provides:
   Mojolicious::Plugin::SessionTags:
     file: lib/Mojolicious/Plugin/SessionTags.pm
-    version: '0.04'
+    version: '0.05'
 requires:
   Mojolicious: '6.20'
   perl: '5.008001'
-version: '0.04'
+version: '0.05'
