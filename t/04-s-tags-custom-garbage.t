@@ -10,7 +10,7 @@ plugin 'Mojolicious::Plugin::SessionTags' => { name => 'role', tags => [qw/ user
 my $t = Test::Mojo->new;
 my $c = $t->app->build_controller;
 
-ok( $c->sum_role == $c->session->{sstag_role} );
+ok( $c->sum_role == $c->session->{st_role} );
 
 throws_ok { $c->add_role( 'dodo1' ) } qr/"dodo1" is not a valid role for Mojolicious\:\:Plugin\:\:SessionTags/, 'add_role with non-existant role input caught error ok';
 throws_ok { $c->add_role( 'dodo2' ) } qr/"dodo2" is not a valid role for Mojolicious\:\:Plugin\:\:SessionTags/, 'add_role with non-existant role input caught error ok';
@@ -33,6 +33,6 @@ throws_ok { $c->has_role } qr/No input provided for Mojolicious\:\:Plugin\:\:Ses
 throws_ok { $c->nix_role } qr/No input provided for Mojolicious\:\:Plugin\:\:SessionTags/, 'nix_role with no role input caught error ok';
 throws_ok { $c->not_role } qr/No input provided for Mojolicious\:\:Plugin\:\:SessionTags/, 'not_role with no role input caught error ok';
 
-ok( $c->sum_role == $c->session->{sstag_role} );
+ok( $c->sum_role == $c->session->{st_role} );
 
 done_testing();

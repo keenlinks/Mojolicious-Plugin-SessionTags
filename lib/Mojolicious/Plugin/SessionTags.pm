@@ -3,9 +3,9 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
-has session_key => 'sstag_tag';
+has session_key => 'st_tag';
 has name => 'tag';
 has place_values => sub { {} };
 
@@ -13,7 +13,7 @@ sub register {
 	my ( $self, $app, $conf ) = @_;
 
 	if ( $conf->{name} ) {
-		$self->session_key( 'sstag_' . $conf->{name} );
+		$self->session_key( 'st_' . $conf->{name} );
 		$self->name( $conf->{name} );
 	}
 
@@ -21,51 +21,42 @@ sub register {
 
 	$app->helper(
 		'sum_' . $self->name => sub {
+			undef $_[0]->session->{ $self->session_key } if ( $_[1] // 1 ) == 0;
 			$_[0]->session->{ $self->session_key } = $_[0]->session->{ $self->session_key } // 0;
 		}
 	);
 
 	$app->helper(
 		'has_' . $self->name => sub {
-			my $c = shift;
-			my $tag = $self->_check_input_tag( shift );
-
+			my $tag = $self->_check_input_tag( $_[1] );
 			my $sum_helper = 'sum_' . $self->name;
-			$c->$sum_helper & $self->place_values->{$tag} ? 1 : 0;
+			$_[0]->$sum_helper & $self->place_values->{$tag} ? 1 : 0;
 		}
 	);
 
 	$app->helper(
 		'not_' . $self->name => sub {
-			my $c = shift;
-			my $tag = $self->_check_input_tag( shift );
-
+			my $tag = $self->_check_input_tag( $_[1] );
 			my $sum_helper = 'sum_' . $self->name;
-			$c->$sum_helper & $self->place_values->{$tag} ? 0 : 1;
+			$_[0]->$sum_helper & $self->place_values->{$tag} ? 0 : 1;
 		}
 	);
 
 	$app->helper(
 		'add_' . $self->name => sub {
-			my $c = shift;
-			my $tag = $self->_check_input_tag( shift );
-
+			my $tag = $self->_check_input_tag( $_[1] );
 			my $sum_helper = 'sum_' . $self->name;
-			my $session_value = $c->$sum_helper;
-
-			$c->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value : $session_value + $self->place_values->{$tag};
+			my $session_value = $_[0]->$sum_helper;
+			$_[0]->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value : $session_value + $self->place_values->{$tag};
 		}
 	);
 
 	$app->helper(
 		'nix_' . $self->name => sub {
-			my $c = shift;
-			my $tag = $self->_check_input_tag( shift );
-
+			my $tag = $self->_check_input_tag( $_[1] );
 			my $sum_helper = 'sum_' . $self->name;
-			my $session_value = $c->$sum_helper;
-
-			$c->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value - $self->place_values->{$tag} : $session_value;
+			my $session_value = $_[0]->$sum_helper;
+			$_[0]->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value - $self->place_values->{$tag} : $session_value;
 		}
 	);
 }

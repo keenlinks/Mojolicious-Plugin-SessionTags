@@ -1,5 +1,9 @@
 Revision history for Perl module Mojolicious-Plugin-SessionTags
 
+0.06 2016-04-30
+  - Added means to zero the sum helper
+  - Revised default session key name
+
 0.05 2016-02-05
   - Streamlined support functions
 
