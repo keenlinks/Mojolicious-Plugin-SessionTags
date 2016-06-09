@@ -3,7 +3,7 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 has session_key => 'st_tag';
 has name => 'tag';
@@ -36,9 +36,8 @@ sub register {
 
 	$app->helper(
 		'not_' . $self->name => sub {
-			my $tag = $self->_check_input_tag( $_[1] );
-			my $sum_helper = 'sum_' . $self->name;
-			$_[0]->$sum_helper & $self->place_values->{$tag} ? 0 : 1;
+			my $has_helper = 'has_' . $self->name;
+			$_[0]->$has_helper( $_[1] ) ? 0 : 1;
 		}
 	);
 
@@ -79,19 +78,19 @@ __END__
 
 =head1 NAME
 
-Mojolicious::Plugin::SessionTags - Use small sized session tags to track conditional user details.
+Mojolicious::Plugin::SessionTags - Use bit flag session tags for user information.
 
 =head1 VERSION
 
-0.06
+0.07
 
 =head1 SYNOPSIS
 
-  # In the start up script: (using the default helper name suffix of "_tag")
+  # Mojolicious:
 
   $app->plugin( 'session_tags' => { tags => [qw/ user writer admin tester /] });
 
-  # In your controller:
+  # Controllers:
 
   $c->add_tag( $_ ) for qw/ writer admin /;
 
@@ -107,7 +106,7 @@ Mojolicious::Plugin::SessionTags - Use small sized session tags to track conditi
 
   ... if $c->has_tag( 'writer' ); # Now returns false
 
-  # In your templates:
+  # Templates:
 
   <nav>
     <ul>
@@ -121,7 +120,7 @@ Mojolicious::Plugin::SessionTags - Use small sized session tags to track conditi
     </ul>
   </nav>
 
-  # Using a custom name suffix of "_role" to give more meaning to the helper.
+  # Using a custom name for a tag to give more meaning to the helpers.
   $app->plugin( name => 'role', 'session_tags' => { tags => [qw/ user writer admin tester /] });
 
   $c->add_role( $_ ) for qw/ writer admin /;
@@ -145,13 +144,13 @@ Mojolicious::Plugin::SessionTags - Use small sized session tags to track conditi
   package MyApp::Plugin::SessionDone;
   use Mojo::Base 'Mojolicious::Plugin::SessionTags';
 
-  # And in start up:
+  # Mojolicious:
 
   $app->plugin( 'MyApp::Plugin::SessionRoles' => { name => 'role', tags => [qw/ user creator admin tester /] });
   $app->plugin( 'MyApp::Plugin::SessionStages' => { name => 'stage', tags => [qw/ new trial member limbo /] });
   $app->plugin( 'MyApp::Plugin::SessionDone' => { name => 'done', tags => [qw/ survey1 survey2 survey3 /] });
 
-  # In your controller:
+  # Controllers:
 
   $c->add_role( $_ ) for qw/ user admin /;
   $c->add_stage( $_ ) for qw/ trial /;
@@ -160,11 +159,11 @@ Mojolicious::Plugin::SessionTags - Use small sized session tags to track conditi
   ... if $c->has_role( 'admin' );  # Returns true
   ... if $c->has_stage( 'member' );  # Returns false
   ... if $c->has_done( 'survey1' );  # Returns true
-  ... if $c->not_done( 'survey3' );  # Returns false
+  ... if $c->not_done( 'survey3' );  # Returns true
 
 =head1 DESCRIPTION
 
-Mojolicious::Plugin::SessionTags uses bit flags to store basic user information in minimal space. Mojolicious defaults to using signed cookies, and cookies have a size limit. Using the default session key with the value of 255, "st_role":255, is all that is needed (actually a bit more as it is Base64 encoded) to store eight conditional "true" values.
+Mojolicious::Plugin::SessionTags uses bit flags to store basic user information in minimal space. Mojolicious defaults to using signed cookies, and cookies have a size limit. Using the defaults along with the value of 255, "st_tag":255, is all that is needed to store eight conditional "true" values.
 
 =head1 METHODS
 
@@ -178,7 +177,7 @@ Registers the plugin into the Mojolicious app.
 
 =head2 name (optional)
 
-Used to create the session key (appended to "st_"). The default key is "st_tag." Also, will be used as helpers (appended to helper prefixes).
+Used to create the session key (appended to "st_"). The default key is "st_tag." Also, "name" will be used as a base for the helpers.
 
 If two or more subclasses are used, then "name" needs to be used and unique.
 
@@ -206,11 +205,11 @@ Removes the bit flag for the tag.
 
 =head2 has_tag( 'tag' )
 
-Returns 1 if the bit flag is set.
+Returns 1 if the bit flag is set. Returns 0 if the bit flag is not set.
 
 =head2 not_tag( 'tag' )
 
-Returns 0 if the bit flag is not set.
+Returns 1 if the bit flag is not set. Returns 0 if the bit flag is set.
 
 =head1 CAUTION
 
