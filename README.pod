@@ -101,9 +101,9 @@ Registers the plugin into the Mojolicious app.
 
 =head2 name (optional)
 
-Used to create the session key (appended to "st_"). The default key is "st_tag." Also, "name" will be used as a base for the helpers.
+Used to provide the key name in the session cookie (appended to "st_"). The default key is "st_tag." Also, "name" will be used as a base for the helpers.
 
-If two or more subclasses are used, then "name" needs to be used and unique.
+If two or more subclasses are used, then "name" needs to be used and unique in each plugin.
 
 =head2 tags
 
@@ -117,7 +117,7 @@ All helpers default to ending with "_tag." If "name" is provided, then it will b
 
 =head2 sum_tag(0)
 
-Returns the current session key value. If passed a 0, then the session key value is set to 0. Passing any other value does nothing.
+Returns the current session key value. If passed a 0, then the session key value is set to 0. Passing any other value does nothing. Creates the session key if it does not already exist. Each helper calls the sum helper internally so any helper can create the key as well.
 
 =head2 add_tag( 'tag' )
 
