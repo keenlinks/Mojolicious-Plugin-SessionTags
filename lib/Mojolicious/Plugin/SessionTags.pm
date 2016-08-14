@@ -3,7 +3,7 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 has session_key => 'st_tag';
 has name => 'tag';
@@ -47,6 +47,7 @@ sub register {
 			my $sum_helper = 'sum_' . $self->name;
 			my $session_value = $_[0]->$sum_helper;
 			$_[0]->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value : $session_value + $self->place_values->{$tag};
+			return shift;
 		}
 	);
 
@@ -56,6 +57,7 @@ sub register {
 			my $sum_helper = 'sum_' . $self->name;
 			my $session_value = $_[0]->$sum_helper;
 			$_[0]->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value - $self->place_values->{$tag} : $session_value;
+			return shift;
 		}
 	);
 }
@@ -82,7 +84,7 @@ Mojolicious::Plugin::SessionTags - Use bit flag session tags for user informatio
 
 =head1 VERSION
 
-0.07
+0.08
 
 =head1 SYNOPSIS
 
@@ -187,7 +189,7 @@ A list of the tags you want to assign.
 
 =head1 HELPERS
 
-All helpers default to ending with "_tag." If "name" is provided, then it will be used (ie. name => 'role', "_role").
+All helpers default to ending with "_tag." If "name" is provided, then it will be used (ie. name => 'role', therefore "add_role", "has_role", etc.).
 
 =head2 sum_tag
 
@@ -197,11 +199,11 @@ Returns the current session key value. If passed a 0, then the session key value
 
 =head2 add_tag( 'tag' )
 
-Sets the bit flag for the tag.
+Sets the bit flag for the tag. Returns the controller object.
 
 =head2 nix_tag( 'tag' )
 
-Removes the bit flag for the tag.
+Removes the bit flag for the tag. Returns the controller object.
 
 =head2 has_tag( 'tag' )
 
