@@ -15,11 +15,8 @@ my $ref1 = $c->add_tag( 'happy' );
 ok( ref $ref1 eq 'Mojolicious::Controller' );
 ok( $c->sum_tag == 1 );
 
-$c->add_tag( 'smart' );
-ok( $c->sum_tag == 9 );
-
-$c->add_tag( 'goofy' );
-ok( $c->sum_tag == 25 );
+ok( $c->add_tag( 'smart' )->sum_tag == 9 );
+ok( $c->add_tag( 'goofy' )->sum_tag == 25 );
 
 ok( $c->sum_tag == $c->session->{st_tag} );
 ok( $c->sum_tag == 25 );
@@ -40,8 +37,7 @@ my $ref2 = $c->nix_tag( 'goofy' );
 ok( ref $ref2 eq 'Mojolicious::Controller' );
 ok( $c->sum_tag == 9 );
 
-$c->nix_tag( 'happy' );
-ok( $c->sum_tag == 8 );
+ok( $c->nix_tag( 'happy' )->sum_tag == 8 );
 
 ok( $c->sum_tag == $c->session->{st_tag} );
 ok( $c->sum_tag == 8 );

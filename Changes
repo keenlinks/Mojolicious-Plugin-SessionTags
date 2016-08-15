@@ -1,5 +1,8 @@
 Revision history for Perl module Mojolicious-Plugin-SessionTags
 
+0.081 2016-08-15
+  - Revised plugin for use with multiple tag namespaces
+
 0.08 2016-08-14
   - Modified add_tag and nix_tag helpers to return the controller object
 

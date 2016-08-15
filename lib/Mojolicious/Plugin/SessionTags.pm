@@ -3,69 +3,75 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.08';
+our $VERSION = '0.081';
 
-has session_key => 'st_tag';
-has name => 'tag';
 has place_values => sub { {} };
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
 
-	if ( $conf->{name} ) {
-		$self->session_key( 'st_' . $conf->{name} );
-		$self->name( $conf->{name} );
+	my @configs;
+	if ( ref $conf eq 'HASH' ) {
+		push @configs, $conf;
+	} else {
+		@configs = @$conf;
 	}
 
-	$self->place_values( $self->_set_place_values( $conf->{tags} ) );
+	for ( @configs ) {
 
-	$app->helper(
-		'sum_' . $self->name => sub {
-			undef $_[0]->session->{ $self->session_key } if ( $_[1] // 1 ) == 0;
-			$_[0]->session->{ $self->session_key } = $_[0]->session->{ $self->session_key } // 0;
-		}
-	);
+		my $name = $_->{name} // 'tag';
+		my $key = "st_$name";
 
-	$app->helper(
-		'has_' . $self->name => sub {
-			my $tag = $self->_check_input_tag( $_[1] );
-			my $sum_helper = 'sum_' . $self->name;
-			$_[0]->$sum_helper & $self->place_values->{$tag} ? 1 : 0;
-		}
-	);
+		$self->place_values->{$key} = $self->_set_place_values( $_->{tags} );
 
-	$app->helper(
-		'not_' . $self->name => sub {
-			my $has_helper = 'has_' . $self->name;
-			$_[0]->$has_helper( $_[1] ) ? 0 : 1;
-		}
-	);
+		$app->helper(
+			"sum_$name" => sub {
+				undef $_[0]->session->{$key} if ( $_[1] // 1 ) == 0;
+				$_[0]->session->{$key} = $_[0]->session->{$key} // 0;
+			}
+		);
 
-	$app->helper(
-		'add_' . $self->name => sub {
-			my $tag = $self->_check_input_tag( $_[1] );
-			my $sum_helper = 'sum_' . $self->name;
-			my $session_value = $_[0]->$sum_helper;
-			$_[0]->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value : $session_value + $self->place_values->{$tag};
-			return shift;
-		}
-	);
+		$app->helper(
+			"has_$name" => sub {
+				my $tag = $self->_check_input_tag( $key, $_[1] );
+				my $sum_helper = "sum_$name";
+				$_[0]->$sum_helper & $self->place_values->{$key}->{$tag} ? 1 : 0;
+			}
+		);
 
-	$app->helper(
-		'nix_' . $self->name => sub {
-			my $tag = $self->_check_input_tag( $_[1] );
-			my $sum_helper = 'sum_' . $self->name;
-			my $session_value = $_[0]->$sum_helper;
-			$_[0]->session->{ $self->session_key } = $session_value & $self->place_values->{$tag} ? $session_value - $self->place_values->{$tag} : $session_value;
-			return shift;
-		}
-	);
+		$app->helper(
+			"not_$name" => sub {
+				my $has_helper = "has_$name";
+				$_[0]->$has_helper( $_[1] ) ? 0 : 1;
+			}
+		);
+
+		$app->helper(
+			"add_$name" => sub {
+				my $tag = $self->_check_input_tag( $key, $_[1] );
+				my $sum_helper = "sum_$name";
+				my $session_value = $_[0]->$sum_helper;
+				$_[0]->session->{$key} = $session_value & $self->place_values->{$key}->{$tag} ? $session_value : $session_value + $self->place_values->{$key}->{$tag};
+				return shift;
+			}
+		);
+
+		$app->helper(
+			"nix_$name" => sub {
+				my $tag = $self->_check_input_tag( $key, $_[1] );
+				my $sum_helper = "sum_$name";
+				my $session_value = $_[0]->$sum_helper;
+				$_[0]->session->{$key} = $session_value & $self->place_values->{$key}->{$tag} ? $session_value - $self->place_values->{$key}->{$tag} : $session_value;
+				return shift;
+			}
+		);
+	}
 }
 
 sub _check_input_tag {
-	croak 'No input provided for ' . __PACKAGE__ unless $_[1];
-	return $_[1] if $_[0]->place_values->{$_[1]};
-	croak '"' . $_[1] . '" is not a valid ' . $_[0]->name . ' for ' . __PACKAGE__;
+	croak 'No input provided for ' . __PACKAGE__ unless $_[2];
+	return $_[2] if $_[0]->place_values->{$_[1]}->{$_[2]};
+	croak '"' . $_[2] . '" is not a valid session tag for ' . __PACKAGE__;
 }
 
 sub _set_place_values {
@@ -74,6 +80,7 @@ sub _set_place_values {
 }
 
 1;
+
 __END__
 
 =encoding utf-8
@@ -84,7 +91,7 @@ Mojolicious::Plugin::SessionTags - Use bit flag session tags for user informatio
 
 =head1 VERSION
 
-0.08
+0.081
 
 =head1 SYNOPSIS
 
@@ -122,7 +129,9 @@ Mojolicious::Plugin::SessionTags - Use bit flag session tags for user informatio
     </ul>
   </nav>
 
-  # Using a custom name for a tag to give more meaning to the helpers.
+  # Variations:
+
+  ## Use a custom name for a tag to give more meaning to the helpers:
   $app->plugin( name => 'role', 'session_tags' => { tags => [qw/ user writer admin tester /] });
 
   $c->add_role( $_ ) for qw/ writer admin /;
@@ -130,29 +139,19 @@ Mojolicious::Plugin::SessionTags - Use bit flag session tags for user informatio
   ... if $c->has_role( 'admin' );  # Returns true
   ... if $c->has_role( 'tester' ); # Returns false
 
-
-  # Use numerous tags to cover many uses:
+  ## Use numerous tags to cover many uses:
 
   $app->plugin( 'session_tags' => { tags => [qw/ user_role creator_role admin_role tester_role new_stage trial_stage member_stage limbo_stage survey1_done survey2_done survey3_done /] });
 
-  # Or subclass the plugin to allow more meaningful helper tags:
+  ## Or divide them into different "namespaces" and wrap in an array reference:
 
-  package MyApp::Plugin::SessionRoles;
-  use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+  $app->plugin( 'session_tags' => [
+      { name => 'role', tags => [qw/ user creator admin tester /] },
+      { name => 'stage', tags => [qw/ new trial member limbo /] },
+      { name => 'done', tags => [qw/ survey1 survey2 survey3 /] }
+  ];
 
-  package MyApp::Plugin::SessionStages;
-  use Mojo::Base 'Mojolicious::Plugin::SessionTags';
-
-  package MyApp::Plugin::SessionDone;
-  use Mojo::Base 'Mojolicious::Plugin::SessionTags';
-
-  # Mojolicious:
-
-  $app->plugin( 'MyApp::Plugin::SessionRoles' => { name => 'role', tags => [qw/ user creator admin tester /] });
-  $app->plugin( 'MyApp::Plugin::SessionStages' => { name => 'stage', tags => [qw/ new trial member limbo /] });
-  $app->plugin( 'MyApp::Plugin::SessionDone' => { name => 'done', tags => [qw/ survey1 survey2 survey3 /] });
-
-  # Controllers:
+  ...
 
   $c->add_role( $_ ) for qw/ user admin /;
   $c->add_stage( $_ ) for qw/ trial /;
@@ -177,45 +176,43 @@ Registers the plugin into the Mojolicious app.
 
 =head1 CONFIGURATION
 
-=head2 name (optional)
+=head2 name (optional unless multiple namespace use)
 
-Used to provide the key name in the session cookie (appended to "st_"). The default key is "st_tag." Also, "name" will be used as a base for the helpers.
-
-If two or more subclasses are used, then "name" needs to be used and unique in each plugin.
+Used to provide the key name in the session cookie (prepended to "st_"). The default key is "st_tag." Also, "name" will be used as a base for the helpers.
 
 =head2 tags
 
-A list of the tags you want to assign.
+A list of the tags you want to assign, submitted as an array reference.
 
 =head1 HELPERS
 
-All helpers default to ending with "_tag." If "name" is provided, then it will be used (ie. name => 'role', therefore "add_role", "has_role", etc.).
+All helpers default to ending with "_tag." If "name" is provided, then it will be used instead (ie. name => 'role', therefore "add_role", "has_role", etc.).
 
-=head2 sum_tag
+=head2 $session_value = $sum_tag
 
-=head2 sum_tag(0)
+=head2 $session_value = sum_tag(0) # will be zero
 
 Returns the current session key value. If passed a 0, then the session key value is set to 0. Passing any other value does nothing. Creates the session key if it does not already exist. Each helper calls the sum helper internally so any helper can create the key as well.
 
-=head2 add_tag( 'tag' )
+=head2 $c = add_tag( 'tag' )
 
 Sets the bit flag for the tag. Returns the controller object.
 
-=head2 nix_tag( 'tag' )
+=head2 $c = nix_tag( 'tag' )
 
 Removes the bit flag for the tag. Returns the controller object.
 
-=head2 has_tag( 'tag' )
+=head2 $boolean = has_tag( 'tag' )
 
 Returns 1 if the bit flag is set. Returns 0 if the bit flag is not set.
 
-=head2 not_tag( 'tag' )
+=head2 $boolean = not_tag( 'tag' )
 
 Returns 1 if the bit flag is not set. Returns 0 if the bit flag is set.
 
 =head1 CAUTION
 
-If at any time, the order of the tags in the configuration is changed (ie. tag deleted, sort order changed if coming from db), then be sure and change your session secret before restaring your app. Changing the secret will immediately wipe out the users' sessions, which is not nice but will prevent users with inaccurate values per the tags. Plan ahead.
+If at any time, the order of the tags in the configuration is changed (ie. tag deleted, sort order changed if coming from db), then be sure and change your session secret before restaring your app. Changing the secret will immediately wipe out the users' sessions, which is not nice but will prevent users with inaccurate values per the tags ("dodo" user becomes an "admin," not good). Plan ahead.
 
 =head1 SOURCE REPOSITORY
 
@@ -227,7 +224,7 @@ Scott Kiehn E<lt>sk.keenlinks@gmail.comE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2016- Scott Kiehn
+Copyright 2016 - Scott Kiehn
 
 =head1 LICENSE
 

@@ -11,12 +11,7 @@ my $c = $t->app->build_controller;
 
 ok( $c->sum_role == $c->session->{st_role} );
 
-
-$c->add_role( 'user' );
-$c->add_role( 'exec' );
-$c->add_role( 'nobody' );
-
-ok( $c->sum_role == $c->session->{st_role} );
+ok( $c->add_role( 'user' )->add_role( 'exec' )->add_role( 'nobody' )->sum_role == $c->session->{st_role} );
 ok( $c->sum_role == 25 );
 
 ok( $c->has_role( 'user' ) == 1 );
@@ -31,11 +26,7 @@ ok( $c->not_role( 'super' ) == 1 );
 ok( $c->not_role( 'exec' ) == 0 );
 ok( $c->not_role( 'nobody' ) == 0 );
 
-
-$c->nix_role( 'nobody' );
-$c->nix_role( 'exec' );
-
-ok( $c->sum_role == $c->session->{st_role} );
+ok( $c->nix_role( 'nobody' )->nix_role( 'exec' )->sum_role == $c->session->{st_role} );
 ok( $c->sum_role== 1 );
 
 ok( $c->has_role( 'user' ) == 1 );
