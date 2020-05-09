@@ -3,74 +3,62 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.081';
+our $VERSION = '0.090';
 
-has place_values => sub { {} };
+our %place_values = ();
 
 sub register {
 	my ( $self, $app, $conf ) = @_;
 
-	my @configs;
-	if ( ref $conf eq 'HASH' ) {
-		push @configs, $conf;
-	} else {
-		@configs = @$conf;
-	}
+	my $tag = $conf->{tag} // 'tag';
+	my $key = $conf->{key} // 'tag';
 
-	for ( @configs ) {
+	my ( $sum, $has, $not, $add, $nix ) = map { $_ . '_' . $tag } (qw/ sum has not add nix /);
 
-		my $name = $_->{name} // 'tag';
-		my $key = "st_$name";
+	$place_values{$key} = $self->_set_place_values( $conf->{tags} );
 
-		$self->place_values->{$key} = $self->_set_place_values( $_->{tags} );
+	$app->helper(
+		$sum => sub {
+			undef $_[0]->session->{$key} if ( $_[1] // 1 ) == 0;
+			$_[0]->session->{$key} = $_[0]->session->{$key} // 0;
+		}
+	);
 
-		$app->helper(
-			"sum_$name" => sub {
-				undef $_[0]->session->{$key} if ( $_[1] // 1 ) == 0;
-				$_[0]->session->{$key} = $_[0]->session->{$key} // 0;
-			}
-		);
+	$app->helper(
+		$has => sub {
+			$self->_tag_ok( $key, $_[1] );
+			$_[0]->$sum & $place_values{$key}->{$_[1]} ? 1 : 0;
+		}
+	);
 
-		$app->helper(
-			"has_$name" => sub {
-				my $tag = $self->_check_input_tag( $key, $_[1] );
-				my $sum_helper = "sum_$name";
-				$_[0]->$sum_helper & $self->place_values->{$key}->{$tag} ? 1 : 0;
-			}
-		);
+	$app->helper(
+		$not => sub {
+			$_[0]->$has( $_[1] ) ? 0 : 1;
+		}
+	);
 
-		$app->helper(
-			"not_$name" => sub {
-				my $has_helper = "has_$name";
-				$_[0]->$has_helper( $_[1] ) ? 0 : 1;
-			}
-		);
+	$app->helper(
+		$add => sub {
+			$self->_tag_ok( $key, $_[1] );
+			my $session_value = $_[0]->$sum;
+			$_[0]->session->{$key} = $session_value & $place_values{$key}->{$_[1]} ? $session_value : $session_value + $place_values{$key}->{$_[1]};
+			return shift;
+		}
+	);
 
-		$app->helper(
-			"add_$name" => sub {
-				my $tag = $self->_check_input_tag( $key, $_[1] );
-				my $sum_helper = "sum_$name";
-				my $session_value = $_[0]->$sum_helper;
-				$_[0]->session->{$key} = $session_value & $self->place_values->{$key}->{$tag} ? $session_value : $session_value + $self->place_values->{$key}->{$tag};
-				return shift;
-			}
-		);
-
-		$app->helper(
-			"nix_$name" => sub {
-				my $tag = $self->_check_input_tag( $key, $_[1] );
-				my $sum_helper = "sum_$name";
-				my $session_value = $_[0]->$sum_helper;
-				$_[0]->session->{$key} = $session_value & $self->place_values->{$key}->{$tag} ? $session_value - $self->place_values->{$key}->{$tag} : $session_value;
-				return shift;
-			}
-		);
-	}
+	$app->helper(
+		$nix => sub {
+			$self->_tag_ok( $key, $_[1] );
+			my $session_value = $_[0]->$sum;
+			$_[0]->session->{$key} = $session_value & $place_values{$key}->{$_[1]} ? $session_value - $place_values{$key}->{$_[1]} : $session_value;
+			return shift;
+		}
+	);
 }
 
-sub _check_input_tag {
+sub _tag_ok {
 	croak 'No input provided for ' . __PACKAGE__ unless $_[2];
-	return $_[2] if $_[0]->place_values->{$_[1]}->{$_[2]};
+	return if $place_values{$_[1]}->{$_[2]};
 	croak '"' . $_[2] . '" is not a valid session tag for ' . __PACKAGE__;
 }
 
@@ -91,7 +79,7 @@ Mojolicious::Plugin::SessionTags - Use bit flag session tags for user informatio
 
 =head1 VERSION
 
-0.081
+0.090
 
 =head1 SYNOPSIS
 
@@ -131,8 +119,8 @@ Mojolicious::Plugin::SessionTags - Use bit flag session tags for user informatio
 
   # Variations:
 
-  ## Use a custom name for a tag to give more meaning to the helpers:
-  $app->plugin( name => 'role', 'session_tags' => { tags => [qw/ user writer admin tester /] });
+  ## Use a custom tag name for a tag to give more meaning to the helpers:
+  $app->plugin( tag => 'role', 'session_tags' => { tags => [qw/ user writer admin tester /] });
 
   $c->add_role( $_ ) for qw/ writer admin /;
 
@@ -143,42 +131,51 @@ Mojolicious::Plugin::SessionTags - Use bit flag session tags for user informatio
 
   $app->plugin( 'session_tags' => { tags => [qw/ user_role creator_role admin_role tester_role new_stage trial_stage member_stage limbo_stage survey1_done survey2_done survey3_done /] });
 
-  ## Or divide them into different "namespaces" and wrap in an array reference:
+  ## Or subclass (Note: The session keys and tag names would need to be unique. As these are different classes, this uniqueness is not checked and is up to the user to verify.):
 
-  $app->plugin( 'session_tags' => [
-      { name => 'role', tags => [qw/ user creator admin tester /] },
-      { name => 'stage', tags => [qw/ new trial member limbo /] },
-      { name => 'done', tags => [qw/ survey1 survey2 survey3 /] }
-  ];
+  package SessionTags1;
+  use Mojo::Base 'Mojolicious::Plugin::SessionTags';
 
-  ...
+  package SessionTags2;
+  use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+
+  package SessionTags3;
+  use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+
+  $app->plugin( 'SessionTags1' => { key => 'unique1', tag => 'role', tags => [qw/ user creator admin tester /] };
+  $app->plugin( 'SessionTags2' => { key => 'unique2', tag => 'stage', tags => [qw/ new trial member limbo /] },
+  $app->plugin( 'SessionTags3' => { key => 'unique3', tag => 'done', tags => [qw/ survey1 survey2 survey3 /] }
 
   $c->add_role( $_ ) for qw/ user admin /;
   $c->add_stage( $_ ) for qw/ trial /;
   $c->add_done( $_ ) for qw/ survey1 survey2 /;
 
-  ... if $c->has_role( 'admin' );  # Returns true
-  ... if $c->has_stage( 'member' );  # Returns false
-  ... if $c->has_done( 'survey1' );  # Returns true
-  ... if $c->not_done( 'survey3' );  # Returns true
+  ... if $c->has_role( 'admin' );   # Returns true
+  ... if $c->has_stage( 'member' ); # Returns false
+  ... if $c->has_done( 'survey1' ); # Returns true
+  ... if $c->not_done( 'survey3' ); # Returns true
 
 =head1 DESCRIPTION
 
-Mojolicious::Plugin::SessionTags uses bit flags to store basic user information in minimal space. Mojolicious defaults to using signed cookies, and cookies have a size limit. Using the defaults along with the value of 255, "st_tag":255, is all that is needed to store eight conditional "true" values.
+Mojolicious::Plugin::SessionTags uses bit flags to store basic user information in minimal space. Mojolicious defaults to using signed cookies, and cookies have a size limit. Using the defaults along with the value of 255, "tag":255, is all that is needed to store eight conditional "true" values.
 
 =head1 METHODS
 
 =head2 register
 
-  $app->plugin( 'session_tags' => { name => 'tag', tags => \@tags } );
+  $app->plugin( 'session_tags' => { key => 'tag', name => 'tag', tags => \@tags } );
 
 Registers the plugin into the Mojolicious app.
 
 =head1 CONFIGURATION
 
-=head2 name (optional unless multiple namespace use)
+=head2 key
 
-Used to provide the key name in the session cookie (prepended to "st_"). The default key is "st_tag." Also, "name" will be used as a base for the helpers.
+Used to provide the session key name. The default key is "tag."
+
+=head2 tag
+
+Used to provide the helper suffix. The default is "tag."
 
 =head2 tags
 
@@ -186,13 +183,13 @@ A list of the tags you want to assign, submitted as an array reference.
 
 =head1 HELPERS
 
-All helpers default to ending with "_tag." If "name" is provided, then it will be used instead (ie. name => 'role', therefore "add_role", "has_role", etc.).
+All helpers default to ending with "_tag." If the "tag" config item is provided, then it will be used instead (ie. tag => 'role', therefore "add_role", "has_role", etc.).
 
-=head2 $session_value = $sum_tag
+=head2 $session_value = sum_tag
 
-=head2 $session_value = sum_tag(0) # will be zero
+=head2 $session_value = sum_tag(0)
 
-Returns the current session key value. If passed a 0, then the session key value is set to 0. Passing any other value does nothing. Creates the session key if it does not already exist. Each helper calls the sum helper internally so any helper can create the key as well.
+Returns the current session key value. If passed a 0, then the session key value is set to 0. Passing any other value does nothing. Creates the session key if it does not already exist.
 
 =head2 $c = add_tag( 'tag' )
 
@@ -220,7 +217,7 @@ L<http://github.com/keenlinks/Mojolicious-Plugin-SessionTags>
 
 =head1 AUTHOR
 
-Scott Kiehn E<lt>sk.keenlinks@gmail.comE<gt>
+Scott Kiehn E<lt>keenlinks at outlook dot comE<gt>
 
 =head1 COPYRIGHT
 

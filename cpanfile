@@ -6,6 +6,6 @@ on 'configure' => sub {
 };
 
 on 'test' => sub {
-    requires 'Test::More', '0.98';
-    requires 'Test::Exception', '0.40';
+    requires 'Test::More', '1.302175';
+    requires 'Test::Exception', '0.43';
 };

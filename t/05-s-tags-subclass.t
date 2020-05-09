@@ -4,18 +4,35 @@ use Test::More;
 use Mojolicious::Lite;
 use Test::Mojo;
 
-plugin 'Mojolicious::Plugin::SessionTags' => [
-	{ name => 'role', tags => [qw/ user admin super exec nobody sam_i_am /] },
-	{ name => 'done', tags => [qw/ dusting coding eating euphemism sleeping /] },
-	{ name => 'meal', tags => [qw/ breakfast second_breakfast lunch tea dinner snack /] }
-];
+{
+	package SessionTags1;
+	use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+}
+
+{
+	package SessionTags2;
+	use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+}
+
+{
+	package SessionTags3;
+	use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+}
+
+plugin 'SessionTags1' => { key => 'tag1', tag => 'role', tags => [qw/ user admin super exec nobody sam_i_am /] };
+plugin 'SessionTags2' => { key => 'tag2', tag => 'done', tags => [qw/ dusting coding eating euphemism sleeping /] };
+plugin 'SessionTags3' => { key => 'tag3', tag => 'meal', tags => [qw/ breakfast second_breakfast lunch tea dinner snack /] };
 
 my $t = Test::Mojo->new;
 my $c = $t->app->build_controller;
 
-ok( $c->sum_role == $c->session->{st_role} );
-ok( $c->sum_done == $c->session->{st_done} );
-ok( $c->sum_meal == $c->session->{st_meal} );
+ok( $c->sum_role == 0 );
+ok( $c->sum_done == 0 );
+ok( $c->sum_meal == 0 );
+
+ok( $c->sum_role == $c->session->{tag1} );
+ok( $c->sum_done == $c->session->{tag2} );
+ok( $c->sum_meal == $c->session->{tag3} );
 
 my $ref = $c->add_role( 'sam_i_am' )
 			->add_meal( 'breakfast' )
@@ -31,11 +48,11 @@ my $ref = $c->add_role( 'sam_i_am' )
 ok( ref $ref eq 'Mojolicious::Controller' );
 
 ok( $c->sum_role == 32 );
-ok( $c->sum_role == $c->session->{st_role} );
-ok( $c->sum_meal == 47 );
-ok( $c->sum_meal == $c->session->{st_meal} );
+ok( $c->sum_role == $c->session->{tag1} );
 ok( $c->sum_done == 12 );
-ok( $c->sum_done == $c->session->{st_done} );
+ok( $c->sum_done == $c->session->{tag2} );
+ok( $c->sum_meal == 47 );
+ok( $c->sum_meal == $c->session->{tag3} );
 
 ok( $c->has_role( 'sam_i_am' ) == 1 );
 ok( $c->has_role( 'exec' ) == 0 );

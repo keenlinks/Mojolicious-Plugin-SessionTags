@@ -1,5 +1,9 @@
 Revision history for Perl module Mojolicious-Plugin-SessionTags
 
+0.090 2020-05-08
+  - Removed multiple tag namespaces (nixed last revision)
+  - Revised default key (st_tag to tag)
+
 0.081 2016-08-15
   - Revised plugin for use with multiple tag namespaces
 

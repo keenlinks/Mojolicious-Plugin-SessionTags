@@ -1,0 +1,171 @@
+NAME
+
+    Mojolicious::Plugin::SessionTags - Use bit flag session tags for user
+    information.
+
+VERSION
+
+    0.090
+
+SYNOPSIS
+
+      # Mojolicious:
+    
+      $app->plugin( 'session_tags' => { tags => [qw/ user writer admin tester /] });
+    
+      # Controllers:
+    
+      $c->add_tag( $_ ) for qw/ writer admin /;
+    
+      ... if $c->has_tag( 'admin' );  # Returns true
+      ... if $c->has_tag( 'writer' ); # Returns true
+      ... if $c->has_tag( 'user' );   # Returns false
+      ... if $c->has_tag( 'tester' ); # Returns false
+    
+      ... if $c->not_tag( 'admin' );  # Returns false
+      ... if $c->not_tag( 'tester' ); # Returns true
+    
+      $c->nix_tag( 'writer' );
+    
+      ... if $c->has_tag( 'writer' ); # Now returns false
+    
+      # Templates:
+    
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+      %   if ( has_tag 'writer' ) {
+          <li><a href="/writer">Writer</a></li>
+      %   }
+      %   if ( has_tag 'admin' ) {
+          <li><a href="/admin">Admin</a></li>
+      %   }
+        </ul>
+      </nav>
+    
+      # Variations:
+    
+      ## Use a custom tag name for a tag to give more meaning to the helpers:
+      $app->plugin( tag => 'role', 'session_tags' => { tags => [qw/ user writer admin tester /] });
+    
+      $c->add_role( $_ ) for qw/ writer admin /;
+    
+      ... if $c->has_role( 'admin' );  # Returns true
+      ... if $c->has_role( 'tester' ); # Returns false
+    
+      ## Use numerous tags to cover many uses:
+    
+      $app->plugin( 'session_tags' => { tags => [qw/ user_role creator_role admin_role tester_role new_stage trial_stage member_stage limbo_stage survey1_done survey2_done survey3_done /] });
+    
+      ## Or subclass (Note: The session keys and tag names would need to be unique. As these are different classes, this uniqueness is not checked and is up to the user to verify.):
+    
+      package SessionTags1;
+      use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+    
+      package SessionTags2;
+      use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+    
+      package SessionTags3;
+      use Mojo::Base 'Mojolicious::Plugin::SessionTags';
+    
+      $app->plugin( 'SessionTags1' => { key => 'unique1', tag => 'role', tags => [qw/ user creator admin tester /] };
+      $app->plugin( 'SessionTags2' => { key => 'unique2', tag => 'stage', tags => [qw/ new trial member limbo /] },
+      $app->plugin( 'SessionTags3' => { key => 'unique3', tag => 'done', tags => [qw/ survey1 survey2 survey3 /] }
+    
+      $c->add_role( $_ ) for qw/ user admin /;
+      $c->add_stage( $_ ) for qw/ trial /;
+      $c->add_done( $_ ) for qw/ survey1 survey2 /;
+    
+      ... if $c->has_role( 'admin' );   # Returns true
+      ... if $c->has_stage( 'member' ); # Returns false
+      ... if $c->has_done( 'survey1' ); # Returns true
+      ... if $c->not_done( 'survey3' ); # Returns true
+
+DESCRIPTION
+
+    Mojolicious::Plugin::SessionTags uses bit flags to store basic user
+    information in minimal space. Mojolicious defaults to using signed
+    cookies, and cookies have a size limit. Using the defaults along with
+    the value of 255, "tag":255, is all that is needed to store eight
+    conditional "true" values.
+
+METHODS
+
+ register
+
+      $app->plugin( 'session_tags' => { key => 'tag', name => 'tag', tags => \@tags } );
+
+    Registers the plugin into the Mojolicious app.
+
+CONFIGURATION
+
+ key
+
+    Used to provide the session key name. The default key is "tag."
+
+ tag
+
+    Used to provide the helper suffix. The default is "tag."
+
+ tags
+
+    A list of the tags you want to assign, submitted as an array reference.
+
+HELPERS
+
+    All helpers default to ending with "_tag." If the "tag" config item is
+    provided, then it will be used instead (ie. tag => 'role', therefore
+    "add_role", "has_role", etc.).
+
+ $session_value = sum_tag
+
+ $session_value = sum_tag(0)
+
+    Returns the current session key value. If passed a 0, then the session
+    key value is set to 0. Passing any other value does nothing. Creates
+    the session key if it does not already exist.
+
+ $c = add_tag( 'tag' )
+
+    Sets the bit flag for the tag. Returns the controller object.
+
+ $c = nix_tag( 'tag' )
+
+    Removes the bit flag for the tag. Returns the controller object.
+
+ $boolean = has_tag( 'tag' )
+
+    Returns 1 if the bit flag is set. Returns 0 if the bit flag is not set.
+
+ $boolean = not_tag( 'tag' )
+
+    Returns 1 if the bit flag is not set. Returns 0 if the bit flag is set.
+
+CAUTION
+
+    If at any time, the order of the tags in the configuration is changed
+    (ie. tag deleted, sort order changed if coming from db), then be sure
+    and change your session secret before restaring your app. Changing the
+    secret will immediately wipe out the users' sessions, which is not nice
+    but will prevent users with inaccurate values per the tags ("dodo" user
+    becomes an "admin," not good). Plan ahead.
+
+SOURCE REPOSITORY
+
+    http://github.com/keenlinks/Mojolicious-Plugin-SessionTags
+
+AUTHOR
+
+    Scott Kiehn <keenlinks at outlook dot com>
+
+COPYRIGHT
+
+    Copyright 2016 - Scott Kiehn
+
+LICENSE
+
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+SEE ALSO
+

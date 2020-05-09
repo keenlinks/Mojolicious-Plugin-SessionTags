@@ -1,14 +1,14 @@
 ---
 abstract: 'Use bit flag session tags for user information.'
 author:
-  - 'Scott Kiehn E<lt>sk.keenlinks@gmail.comE<gt>'
+  - 'Scott Kiehn E<lt>keenlinks at outlook dot comE<gt>'
 build_requires:
-  Test::Exception: '0.40'
-  Test::More: '0.98'
+  Test::Exception: '0.43'
+  Test::More: '1.302175'
 configure_requires:
   Module::Build::Tiny: '0.039'
 dynamic_config: 0
-generated_by: 'App::ModuleBuildTiny version 0.014, CPAN::Meta::Converter version 2.150005'
+generated_by: 'App::ModuleBuildTiny version 0.027, CPAN::Meta::Converter version 2.150010'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -17,9 +17,10 @@ name: Mojolicious-Plugin-SessionTags
 provides:
   Mojolicious::Plugin::SessionTags:
     file: lib/Mojolicious/Plugin/SessionTags.pm
-    version: '0.081'
+    version: '0.090'
 requires:
   Mojolicious: '6.20'
   perl: '5.008001'
-version: '0.081'
+version: '0.090'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
+x_spdx_expression: 'Artistic-1.0-Perl OR GPL-1.0-or-later'

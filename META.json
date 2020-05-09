@@ -1,10 +1,10 @@
 {
    "abstract" : "Use bit flag session tags for user information.",
    "author" : [
-      "Scott Kiehn E<lt>sk.keenlinks@gmail.comE<gt>"
+      "Scott Kiehn E<lt>keenlinks at outlook dot comE<gt>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "App::ModuleBuildTiny version 0.014",
+   "generated_by" : "App::ModuleBuildTiny version 0.027",
    "license" : [
       "perl_5"
    ],
@@ -21,7 +21,7 @@
       },
       "develop" : {
          "requires" : {
-            "App::ModuleBuildTiny" : "0.014"
+            "App::ModuleBuildTiny" : "0.027"
          }
       },
       "runtime" : {
@@ -32,18 +32,19 @@
       },
       "test" : {
          "requires" : {
-            "Test::Exception" : "0.40",
-            "Test::More" : "0.98"
+            "Test::Exception" : "0.43",
+            "Test::More" : "1.302175"
          }
       }
    },
    "provides" : {
       "Mojolicious::Plugin::SessionTags" : {
          "file" : "lib/Mojolicious/Plugin/SessionTags.pm",
-         "version" : "0.081"
+         "version" : "0.090"
       }
    },
    "release_status" : "stable",
-   "version" : "0.081",
-   "x_serialization_backend" : "JSON::PP version 2.27300"
+   "version" : "0.090",
+   "x_serialization_backend" : "JSON::PP version 4.02",
+   "x_spdx_expression" : "Artistic-1.0-Perl OR GPL-1.0-or-later"
 }
