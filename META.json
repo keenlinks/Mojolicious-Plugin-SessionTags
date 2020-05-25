@@ -40,11 +40,11 @@
    "provides" : {
       "Mojolicious::Plugin::SessionTags" : {
          "file" : "lib/Mojolicious/Plugin/SessionTags.pm",
-         "version" : "0.090"
+         "version" : "0.091"
       }
    },
    "release_status" : "stable",
-   "version" : "0.090",
+   "version" : "0.091",
    "x_serialization_backend" : "JSON::PP version 4.02",
    "x_spdx_expression" : "Artistic-1.0-Perl OR GPL-1.0-or-later"
 }

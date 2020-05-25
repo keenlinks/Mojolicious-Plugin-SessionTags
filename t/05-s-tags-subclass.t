@@ -55,11 +55,11 @@ ok( $c->sum_meal == 47 );
 ok( $c->sum_meal == $c->session->{tag3} );
 
 ok( $c->has_role( 'sam_i_am' ) == 1 );
-ok( $c->has_role( 'exec' ) == 0 );
+ok( $c->is_role( 'exec' ) == 0 );
 ok( $c->has_done( 'euphemism' ) == 1 );
-ok( $c->has_done( 'sleeping' ) == 0 );
+ok( $c->is_done( 'sleeping' ) == 0 );
 ok( $c->has_meal( 'breakfast' ) == 1 );
-ok( $c->has_meal( 'dinner' ) == 0 );
+ok( $c->is_meal( 'dinner' ) == 0 );
 
 ok( $c->not_role( 'nobody' ) == 1 );
 ok( $c->not_role( 'sam_i_am' ) == 0 );

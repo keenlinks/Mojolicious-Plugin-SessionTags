@@ -5,7 +5,7 @@ NAME
 
 VERSION
 
-    0.090
+    0.091
 
 SYNOPSIS
 
@@ -136,6 +136,10 @@ HELPERS
  $boolean = has_tag( 'tag' )
 
     Returns 1 if the bit flag is set. Returns 0 if the bit flag is not set.
+
+ $boolean = is_tag( 'tag' )
+
+    An alias for "has_tag."
 
  $boolean = not_tag( 'tag' )
 

@@ -29,6 +29,12 @@ ok( $c->has_tag( 'stupid' ) == 0 );
 ok( $c->has_tag( 'smart' ) == 1 );
 ok( $c->has_tag( 'goofy' ) == 1 );
 
+ok( $c->is_tag( 'happy' ) == 1 );
+ok( $c->is_tag( 'sad' ) == 0 );
+ok( $c->is_tag( 'stupid' ) == 0 );
+ok( $c->is_tag( 'smart' ) == 1 );
+ok( $c->is_tag( 'goofy' ) == 1 );
+
 ok( $c->not_tag( 'happy' ) == 0 );
 ok( $c->not_tag( 'sad' ) == 1 );
 ok( $c->not_tag( 'stupid' ) == 1 );
@@ -50,6 +56,12 @@ ok( $c->has_tag( 'stupid' ) == 0 );
 ok( $c->has_tag( 'smart' ) == 1 );
 ok( $c->has_tag( 'goofy' ) == 0 );
 
+ok( $c->is_tag( 'happy' ) == 0 );
+ok( $c->is_tag( 'sad' ) == 0 );
+ok( $c->is_tag( 'stupid' ) == 0 );
+ok( $c->is_tag( 'smart' ) == 1 );
+ok( $c->is_tag( 'goofy' ) == 0 );
+
 ok( $c->not_tag( 'happy' ) == 1 );
 ok( $c->not_tag( 'sad' ) == 1 );
 ok( $c->not_tag( 'stupid' ) == 1 );
@@ -64,6 +76,12 @@ ok( $c->has_tag( 'sad' ) == 0 );
 ok( $c->has_tag( 'stupid' ) == 0 );
 ok( $c->has_tag( 'smart' ) == 0 );
 ok( $c->has_tag( 'goofy' ) == 0 );
+
+ok( $c->is_tag( 'happy' ) == 0 );
+ok( $c->is_tag( 'sad' ) == 0 );
+ok( $c->is_tag( 'stupid' ) == 0 );
+ok( $c->is_tag( 'smart' ) == 0 );
+ok( $c->is_tag( 'goofy' ) == 0 );
 
 ok( $c->not_tag( 'happy' ) == 1 );
 ok( $c->not_tag( 'sad' ) == 1 );

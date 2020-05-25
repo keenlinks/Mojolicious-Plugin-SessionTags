@@ -3,7 +3,7 @@ package Mojolicious::Plugin::SessionTags;
 use Mojo::Base 'Mojolicious::Plugin';
 use Carp;
 
-our $VERSION = '0.090';
+our $VERSION = '0.091';
 
 our %place_values = ();
 
@@ -13,7 +13,7 @@ sub register {
 	my $tag = $conf->{tag} // 'tag';
 	my $key = $conf->{key} // 'tag';
 
-	my ( $sum, $has, $not, $add, $nix ) = map { $_ . '_' . $tag } (qw/ sum has not add nix /);
+	my ( $sum, $has, $is, $not, $add, $nix ) = map { $_ . '_' . $tag } (qw/ sum has is not add nix /);
 
 	$place_values{$key} = $self->_set_place_values( $conf->{tags} );
 
@@ -28,6 +28,12 @@ sub register {
 		$has => sub {
 			$self->_tag_ok( $key, $_[1] );
 			$_[0]->$sum & $place_values{$key}->{$_[1]} ? 1 : 0;
+		}
+	);
+
+	$app->helper(
+		$is => sub {
+			$_[0]->$has( $_[1] );
 		}
 	);
 
@@ -79,7 +85,7 @@ Mojolicious::Plugin::SessionTags - Use bit flag session tags for user informatio
 
 =head1 VERSION
 
-0.090
+0.091
 
 =head1 SYNOPSIS
 
@@ -202,6 +208,10 @@ Removes the bit flag for the tag. Returns the controller object.
 =head2 $boolean = has_tag( 'tag' )
 
 Returns 1 if the bit flag is set. Returns 0 if the bit flag is not set.
+
+=head2 $boolean = is_tag( 'tag' )
+
+An alias for "has_tag."
 
 =head2 $boolean = not_tag( 'tag' )
 
